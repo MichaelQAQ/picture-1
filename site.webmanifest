@@ -1,0 +1,19 @@
+{
+  "name": "手机展厅相册",
+  "short_name": "展厅相册",
+  "description": "一个可部署到 HTTPS 链接的手机相册展览网页。",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#f5f1e9",
+  "theme_color": "#ece7dc",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

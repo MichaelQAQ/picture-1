@@ -1,0 +1,1546 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#ece7dc">
+  <link rel="manifest" href="site.webmanifest">
+  <title>手机展厅相册</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #242321;
+      --muted: #6f6a61;
+      --wall: #f5f1e9;
+      --wall-deep: #e6ddd0;
+      --floor: #cbb89d;
+      --rail: #2f4f4f;
+      --teal: #0f766e;
+      --red: #b4493f;
+      --gold: #b87920;
+      --paper: #fffdf8;
+      --shadow: 0 18px 42px rgba(54, 42, 26, .16);
+      --line: rgba(36, 35, 33, .16);
+      --topbar-h: 86px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+      background: #ece7dc;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100svh;
+      color: var(--ink);
+      background:
+        linear-gradient(180deg, rgba(47, 79, 79, .08), transparent 22%),
+        linear-gradient(180deg, #f2eee6 0%, #f8f4ed 52%, #d8c4a7 100%);
+      letter-spacing: 0;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .app-shell {
+      min-height: 100svh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      min-height: var(--topbar-h);
+      padding: calc(12px + env(safe-area-inset-top)) clamp(14px, 4vw, 28px) 12px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: center;
+      background: rgba(250, 247, 239, .86);
+      border-bottom: 1px solid rgba(36, 35, 33, .12);
+      backdrop-filter: blur(18px);
+    }
+
+    .brand {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-mark {
+      width: 38px;
+      height: 38px;
+      flex: 0 0 auto;
+      border-radius: 8px;
+      background:
+        linear-gradient(135deg, transparent 42%, rgba(255, 253, 248, .85) 43% 58%, transparent 59%),
+        linear-gradient(135deg, var(--teal), #2f4f4f 48%, var(--gold));
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .55), 0 10px 24px rgba(36, 35, 33, .18);
+    }
+
+    h1,
+    h2,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: clamp(1.15rem, 3.8vw, 1.65rem);
+      line-height: 1.05;
+      font-weight: 800;
+    }
+
+    .status-line {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: .86rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tool-rail {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
+    .icon-button,
+    .command-button {
+      min-height: 42px;
+      border: 1px solid rgba(36, 35, 33, .16);
+      border-radius: 8px;
+      color: var(--ink);
+      background: rgba(255, 253, 248, .78);
+      box-shadow: 0 8px 22px rgba(54, 42, 26, .08);
+      cursor: pointer;
+      transition: transform .18s ease, border-color .18s ease, background .18s ease, color .18s ease;
+    }
+
+    .icon-button {
+      width: 42px;
+      display: inline-grid;
+      place-items: center;
+    }
+
+    .command-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 14px;
+      font-weight: 750;
+    }
+
+    .icon-button svg,
+    .command-button svg {
+      width: 20px;
+      height: 20px;
+      stroke-width: 2;
+    }
+
+    .icon-button:hover,
+    .command-button:hover {
+      transform: translateY(-1px);
+      border-color: rgba(15, 118, 110, .44);
+      background: #fffdf8;
+    }
+
+    .icon-button:focus-visible,
+    .command-button:focus-visible,
+    .photo-button:focus-visible,
+    .select-button:focus-visible {
+      outline: 3px solid rgba(15, 118, 110, .3);
+      outline-offset: 3px;
+    }
+
+    .icon-button.is-active {
+      color: #fffdf8;
+      background: var(--teal);
+      border-color: var(--teal);
+    }
+
+    .icon-button:disabled,
+    .command-button:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .gallery-stage {
+      flex: 1;
+      padding: clamp(18px, 4vw, 44px) clamp(14px, 4vw, 34px) calc(88px + env(safe-area-inset-bottom));
+    }
+
+    .gallery-wall {
+      position: relative;
+      max-width: 1180px;
+      min-height: calc(100svh - var(--topbar-h) - 80px);
+      margin: 0 auto;
+      padding: clamp(22px, 5vw, 58px) clamp(14px, 4vw, 48px) clamp(54px, 8vw, 90px);
+      border: 1px solid rgba(75, 64, 49, .16);
+      border-radius: 8px;
+      background:
+        linear-gradient(90deg, rgba(47, 79, 79, .08) 0 1px, transparent 1px calc(25% - 1px), rgba(184, 121, 32, .1) calc(25% - 1px) 25%, transparent 25% 50%, rgba(47, 79, 79, .08) 50% calc(50% + 1px), transparent calc(50% + 1px) 75%, rgba(184, 73, 63, .1) 75% calc(75% + 1px), transparent calc(75% + 1px)),
+        linear-gradient(180deg, var(--wall) 0%, #fbf8f1 72%, var(--wall-deep) 100%);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .gallery-wall::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: clamp(74px, 14vw, 150px);
+      background:
+        linear-gradient(180deg, rgba(255, 253, 248, 0), rgba(71, 50, 30, .12)),
+        repeating-linear-gradient(112deg, rgba(70, 48, 30, .15) 0 1px, transparent 1px 54px),
+        linear-gradient(180deg, rgba(203, 184, 157, .2), rgba(160, 126, 82, .34));
+      border-top: 1px solid rgba(75, 64, 49, .16);
+      pointer-events: none;
+    }
+
+    .gallery-wall::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 6%, rgba(255, 253, 248, .72), transparent 34%);
+      pointer-events: none;
+    }
+
+    .photo-grid {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
+      gap: clamp(30px, 5vw, 58px) clamp(18px, 4vw, 42px);
+      align-items: start;
+    }
+
+    .artwork {
+      position: relative;
+      padding: clamp(10px, 2.2vw, 16px);
+      border: 1px solid rgba(75, 64, 49, .2);
+      border-radius: 6px;
+      background: var(--paper);
+      box-shadow: 0 20px 34px rgba(72, 52, 31, .13);
+      transform: rotate(var(--swing, 0deg));
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+      isolation: isolate;
+    }
+
+    .artwork::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: 100%;
+      width: 1px;
+      height: 24px;
+      background: rgba(75, 64, 49, .32);
+      transform: translateX(-50%);
+    }
+
+    .artwork::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: calc(100% + 20px);
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 1px 4px rgba(54, 42, 26, .28);
+      transform: translateX(-50%);
+    }
+
+    .artwork:hover {
+      transform: translateY(-3px) rotate(0deg);
+      border-color: rgba(15, 118, 110, .36);
+      box-shadow: 0 24px 44px rgba(72, 52, 31, .18);
+    }
+
+    .artwork.is-selected {
+      border-color: var(--teal);
+      box-shadow: 0 0 0 4px rgba(15, 118, 110, .14), 0 24px 44px rgba(72, 52, 31, .18);
+    }
+
+    .photo-button {
+      display: block;
+      width: 100%;
+      padding: 0;
+      border: 0;
+      border-radius: 4px;
+      background: #181817;
+      cursor: zoom-in;
+      overflow: hidden;
+    }
+
+    .photo-frame {
+      display: block;
+      aspect-ratio: var(--ratio, 4 / 3);
+      min-height: 156px;
+      padding: clamp(6px, 1.8vw, 10px);
+      border: 9px solid #28231f;
+      background: #111;
+      box-shadow: inset 0 0 0 1px rgba(255, 253, 248, .16);
+    }
+
+    .photo-frame img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+      background: #1b1a18;
+    }
+
+    .artwork-caption {
+      display: grid;
+      gap: 4px;
+      padding-top: 10px;
+      min-width: 0;
+    }
+
+    .artwork-name {
+      font-size: .92rem;
+      font-weight: 800;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .artwork-meta {
+      color: var(--muted);
+      font-size: .78rem;
+    }
+
+    .artwork-actions {
+      position: absolute;
+      right: 10px;
+      top: 10px;
+      display: flex;
+      gap: 6px;
+      opacity: 0;
+      transform: translateY(-4px);
+      transition: opacity .18s ease, transform .18s ease;
+    }
+
+    .artwork:hover .artwork-actions,
+    .artwork:focus-within .artwork-actions,
+    .selection-on .artwork-actions {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .mini-button,
+    .select-button {
+      width: 34px;
+      height: 34px;
+      border: 1px solid rgba(36, 35, 33, .16);
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      color: var(--ink);
+      background: rgba(255, 253, 248, .92);
+      box-shadow: 0 8px 18px rgba(54, 42, 26, .12);
+      cursor: pointer;
+    }
+
+    .mini-button svg,
+    .select-button svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .select-button {
+      position: absolute;
+      left: 10px;
+      top: 10px;
+      z-index: 2;
+      opacity: 0;
+      transform: translateY(-4px);
+      transition: opacity .18s ease, transform .18s ease, background .18s ease, color .18s ease;
+    }
+
+    .artwork:hover .select-button,
+    .artwork:focus-within .select-button,
+    .selection-on .select-button {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .select-button.is-checked {
+      color: #fffdf8;
+      background: var(--teal);
+      border-color: var(--teal);
+    }
+
+    .empty-state {
+      position: relative;
+      z-index: 1;
+      min-height: 58svh;
+      display: grid;
+      place-items: center;
+      align-content: center;
+      gap: 18px;
+      text-align: center;
+      color: var(--ink);
+    }
+
+    .empty-state[hidden] {
+      display: none;
+    }
+
+    .empty-frame {
+      width: min(62vw, 280px);
+      aspect-ratio: 4 / 3;
+      border: 12px solid #2b2521;
+      border-radius: 4px;
+      background:
+        linear-gradient(135deg, rgba(15, 118, 110, .22), transparent 40%),
+        linear-gradient(35deg, transparent 0 52%, rgba(184, 121, 32, .25) 52% 68%, transparent 68%),
+        #fffdf8;
+      box-shadow: 0 24px 48px rgba(72, 52, 31, .18);
+    }
+
+    .empty-state h2 {
+      font-size: clamp(1.2rem, 5vw, 2rem);
+      line-height: 1.05;
+    }
+
+    .empty-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .selection-bar {
+      position: fixed;
+      left: max(12px, env(safe-area-inset-left));
+      right: max(12px, env(safe-area-inset-right));
+      bottom: max(12px, env(safe-area-inset-bottom));
+      z-index: 22;
+      max-width: 680px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px;
+      border: 1px solid rgba(36, 35, 33, .12);
+      border-radius: 8px;
+      background: rgba(255, 253, 248, .92);
+      box-shadow: 0 18px 42px rgba(54, 42, 26, .2);
+      backdrop-filter: blur(18px);
+    }
+
+    .selection-bar[hidden] {
+      display: none;
+    }
+
+    .selection-copy {
+      min-width: 84px;
+      font-weight: 800;
+    }
+
+    .selection-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .viewer,
+    .camera-sheet {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: grid;
+      place-items: center;
+      padding: clamp(14px, 4vw, 28px);
+      background: rgba(18, 17, 15, .72);
+      backdrop-filter: blur(10px);
+    }
+
+    .viewer[hidden],
+    .camera-sheet[hidden] {
+      display: none;
+    }
+
+    .viewer-panel,
+    .camera-panel {
+      width: min(100%, 960px);
+      max-height: min(860px, 92svh);
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      gap: 12px;
+      padding: 12px;
+      border: 1px solid rgba(255, 253, 248, .18);
+      border-radius: 8px;
+      background: #171614;
+      color: #fffdf8;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, .45);
+    }
+
+    .modal-top,
+    .modal-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .viewer-title {
+      min-width: 0;
+      display: grid;
+      gap: 3px;
+    }
+
+    .viewer-title strong {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .viewer-title span {
+      color: rgba(255, 253, 248, .62);
+      font-size: .84rem;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .dark-button {
+      color: #fffdf8;
+      background: rgba(255, 253, 248, .08);
+      border-color: rgba(255, 253, 248, .18);
+      box-shadow: none;
+    }
+
+    .dark-button:hover {
+      color: #fffdf8;
+      background: rgba(255, 253, 248, .16);
+      border-color: rgba(255, 253, 248, .32);
+    }
+
+    .viewer-image-wrap,
+    .camera-preview {
+      min-height: 0;
+      display: grid;
+      place-items: center;
+      border-radius: 6px;
+      background:
+        linear-gradient(45deg, rgba(255, 253, 248, .045) 25%, transparent 25% 50%, rgba(255, 253, 248, .045) 50% 75%, transparent 75%),
+        #0f0e0d;
+      background-size: 26px 26px;
+      overflow: hidden;
+    }
+
+    .viewer-image-wrap img {
+      max-width: 100%;
+      max-height: 72svh;
+      display: block;
+      object-fit: contain;
+    }
+
+    .camera-preview video {
+      width: 100%;
+      max-height: 68svh;
+      display: block;
+      object-fit: contain;
+      background: #050505;
+    }
+
+    .danger {
+      color: #fffdf8;
+      background: var(--red);
+      border-color: rgba(255, 255, 255, .08);
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: calc(18px + env(safe-area-inset-bottom));
+      z-index: 80;
+      max-width: min(92vw, 460px);
+      padding: 12px 14px;
+      border-radius: 8px;
+      color: #fffdf8;
+      background: rgba(25, 24, 22, .92);
+      box-shadow: 0 16px 38px rgba(0, 0, 0, .28);
+      transform: translate(-50%, 14px);
+      opacity: 0;
+      pointer-events: none;
+      transition: transform .2s ease, opacity .2s ease;
+    }
+
+    .toast.is-visible {
+      transform: translate(-50%, 0);
+      opacity: 1;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .file-input {
+      position: fixed;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    @media (max-width: 720px) {
+      :root {
+        --topbar-h: 132px;
+      }
+
+      .topbar {
+        grid-template-columns: 1fr;
+        align-items: stretch;
+      }
+
+      .tool-rail {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+      }
+
+      .icon-button {
+        width: 100%;
+      }
+
+      .gallery-stage {
+        padding-inline: 10px;
+      }
+
+      .gallery-wall {
+        padding-inline: 12px;
+      }
+
+      .photo-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 32px 12px;
+      }
+
+      .artwork {
+        padding: 8px;
+        transform: none;
+      }
+
+      .artwork-actions,
+      .select-button {
+        opacity: 1;
+        transform: none;
+      }
+
+      .photo-frame {
+        min-height: 118px;
+        border-width: 6px;
+        padding: 4px;
+      }
+
+      .artwork-name {
+        font-size: .82rem;
+      }
+
+      .modal-bottom,
+      .selection-bar {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .modal-actions,
+      .selection-actions {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .selection-actions .command-button,
+      .modal-actions .command-button {
+        padding-inline: 8px;
+      }
+    }
+
+    @media (max-width: 390px) {
+      .photo-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .tool-rail {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <div>
+          <h1>手机展厅相册</h1>
+          <p class="status-line" id="statusLine">0 张作品</p>
+        </div>
+      </div>
+
+      <nav class="tool-rail" aria-label="照片操作">
+        <button class="icon-button" id="albumButton" type="button" title="从相册选择" aria-label="从相册选择">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8" cy="10" r="2"></circle><path d="m21 15-4.4-4.4a2 2 0 0 0-2.8 0L7 17"></path></svg>
+        </button>
+        <button class="icon-button" id="captureButton" type="button" title="拍照导入" aria-label="拍照导入">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M14.5 4h-5L7.8 6H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-2.8z"></path><circle cx="12" cy="13" r="3.5"></circle></svg>
+        </button>
+        <button class="icon-button" id="liveCameraButton" type="button" title="实时相机" aria-label="实时相机">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="m15 10 4.6-2.3A1 1 0 0 1 21 8.6v6.8a1 1 0 0 1-1.4.9L15 14"></path><rect x="3" y="6" width="12" height="12" rx="2"></rect></svg>
+        </button>
+        <button class="icon-button" id="shareButton" type="button" title="分享链接" aria-label="分享链接">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><path d="m8.6 10.5 6.8-4"></path><path d="m8.6 13.5 6.8 4"></path></svg>
+        </button>
+        <button class="icon-button" id="selectModeButton" type="button" title="选择照片" aria-label="选择照片" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="m9 11 3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+        </button>
+        <button class="icon-button" id="downloadAllButton" type="button" title="下载全部" aria-label="下载全部" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path></svg>
+        </button>
+        <button class="icon-button" id="clearButton" type="button" title="清空展厅" aria-label="清空展厅" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="m19 6-1 14H6L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg>
+        </button>
+      </nav>
+    </header>
+
+    <main class="gallery-stage">
+      <section class="gallery-wall" aria-live="polite">
+        <div class="empty-state" id="emptyState">
+          <div class="empty-frame" aria-hidden="true"></div>
+          <h2>空展厅</h2>
+          <div class="empty-actions">
+            <button class="command-button" id="emptyAlbumButton" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8" cy="10" r="2"></circle><path d="m21 15-4.4-4.4a2 2 0 0 0-2.8 0L7 17"></path></svg>
+              相册
+            </button>
+            <button class="command-button" id="emptyCaptureButton" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M14.5 4h-5L7.8 6H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-2.8z"></path><circle cx="12" cy="13" r="3.5"></circle></svg>
+              拍照
+            </button>
+          </div>
+        </div>
+        <div class="photo-grid" id="photoGrid" aria-label="照片展厅"></div>
+      </section>
+    </main>
+
+    <section class="selection-bar" id="selectionBar" hidden>
+      <div class="selection-copy"><span id="selectionCount">0</span> 已选</div>
+      <div class="selection-actions">
+        <button class="command-button" id="downloadSelectedButton" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path></svg>
+          下载所选
+        </button>
+        <button class="icon-button" id="deleteSelectedButton" type="button" title="删除所选" aria-label="删除所选">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="m19 6-1 14H6L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg>
+        </button>
+        <button class="icon-button" id="cancelSelectionButton" type="button" title="取消选择" aria-label="取消选择">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+        </button>
+      </div>
+    </section>
+
+    <input class="file-input" id="albumInput" type="file" accept="image/*" multiple>
+    <input class="file-input" id="captureInput" type="file" accept="image/*" capture="environment">
+  </div>
+
+  <div class="viewer" id="viewer" role="dialog" aria-modal="true" aria-labelledby="viewerTitle" hidden>
+    <div class="viewer-panel">
+      <div class="modal-top">
+        <div class="viewer-title">
+          <strong id="viewerTitle">照片</strong>
+          <span id="viewerMeta">--</span>
+        </div>
+        <button class="icon-button dark-button" id="closeViewerButton" type="button" title="关闭" aria-label="关闭">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+        </button>
+      </div>
+      <div class="viewer-image-wrap">
+        <img id="viewerImage" alt="">
+      </div>
+      <div class="modal-bottom">
+        <span id="viewerSize">--</span>
+        <div class="modal-actions">
+          <button class="command-button dark-button" id="viewerDownloadButton" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path></svg>
+            下载
+          </button>
+          <button class="command-button danger" id="viewerDeleteButton" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="m19 6-1 14H6L5 6"></path></svg>
+            删除
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="camera-sheet" id="cameraSheet" role="dialog" aria-modal="true" aria-labelledby="cameraTitle" hidden>
+    <div class="camera-panel">
+      <div class="modal-top">
+        <div class="viewer-title">
+          <strong id="cameraTitle">实时相机</strong>
+          <span id="cameraStatus">准备中</span>
+        </div>
+        <button class="icon-button dark-button" id="closeCameraButton" type="button" title="关闭相机" aria-label="关闭相机">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+        </button>
+      </div>
+      <div class="camera-preview">
+        <video id="cameraVideo" autoplay playsinline muted></video>
+      </div>
+      <div class="modal-bottom">
+        <span>实时取景</span>
+        <div class="modal-actions">
+          <button class="icon-button dark-button" id="switchCameraButton" type="button" title="切换镜头" aria-label="切换镜头">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="m17 1 4 4-4 4"></path><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><path d="m7 23-4-4 4-4"></path><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+          </button>
+          <button class="command-button dark-button" id="shutterButton" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="7"></circle><circle cx="12" cy="12" r="3"></circle></svg>
+            拍摄
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const DB_NAME = "mobile-exhibit-gallery";
+    const STORE_NAME = "photos";
+
+    const state = {
+      photos: [],
+      selected: new Set(),
+      selectionMode: false,
+      activeId: null,
+      db: null,
+      cameraStream: null,
+      facingMode: "environment",
+      toastTimer: 0
+    };
+
+    const $ = (selector) => document.querySelector(selector);
+
+    const elements = {
+      statusLine: $("#statusLine"),
+      photoGrid: $("#photoGrid"),
+      emptyState: $("#emptyState"),
+      albumInput: $("#albumInput"),
+      captureInput: $("#captureInput"),
+      albumButton: $("#albumButton"),
+      emptyAlbumButton: $("#emptyAlbumButton"),
+      captureButton: $("#captureButton"),
+      emptyCaptureButton: $("#emptyCaptureButton"),
+      liveCameraButton: $("#liveCameraButton"),
+      shareButton: $("#shareButton"),
+      selectModeButton: $("#selectModeButton"),
+      downloadAllButton: $("#downloadAllButton"),
+      clearButton: $("#clearButton"),
+      selectionBar: $("#selectionBar"),
+      selectionCount: $("#selectionCount"),
+      downloadSelectedButton: $("#downloadSelectedButton"),
+      deleteSelectedButton: $("#deleteSelectedButton"),
+      cancelSelectionButton: $("#cancelSelectionButton"),
+      viewer: $("#viewer"),
+      viewerImage: $("#viewerImage"),
+      viewerTitle: $("#viewerTitle"),
+      viewerMeta: $("#viewerMeta"),
+      viewerSize: $("#viewerSize"),
+      closeViewerButton: $("#closeViewerButton"),
+      viewerDownloadButton: $("#viewerDownloadButton"),
+      viewerDeleteButton: $("#viewerDeleteButton"),
+      cameraSheet: $("#cameraSheet"),
+      cameraVideo: $("#cameraVideo"),
+      cameraStatus: $("#cameraStatus"),
+      closeCameraButton: $("#closeCameraButton"),
+      switchCameraButton: $("#switchCameraButton"),
+      shutterButton: $("#shutterButton"),
+      toast: $("#toast")
+    };
+
+    const icons = {
+      check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="m5 12 4 4L19 6"></path></svg>',
+      square: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"></rect></svg>',
+      download: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path></svg>',
+      trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="m19 6-1 14H6L5 6"></path></svg>'
+    };
+
+    init();
+
+    async function init() {
+      bindEvents();
+      try {
+        state.db = await openDatabase();
+        await loadPhotos();
+      } catch (error) {
+        showToast("本地存储不可用，当前照片会保留在本次页面中。");
+      }
+      render();
+    }
+
+    function bindEvents() {
+      elements.albumButton.addEventListener("click", () => elements.albumInput.click());
+      elements.emptyAlbumButton.addEventListener("click", () => elements.albumInput.click());
+      elements.captureButton.addEventListener("click", () => elements.captureInput.click());
+      elements.emptyCaptureButton.addEventListener("click", () => elements.captureInput.click());
+      elements.liveCameraButton.addEventListener("click", openCamera);
+      elements.shareButton.addEventListener("click", sharePage);
+      elements.albumInput.addEventListener("change", (event) => handleFiles(event.target.files, "相册"));
+      elements.captureInput.addEventListener("change", (event) => handleFiles(event.target.files, "拍照"));
+      elements.selectModeButton.addEventListener("click", () => setSelectionMode(!state.selectionMode));
+      elements.downloadAllButton.addEventListener("click", () => downloadPhotos(state.photos));
+      elements.clearButton.addEventListener("click", clearGallery);
+      elements.cancelSelectionButton.addEventListener("click", () => setSelectionMode(false));
+      elements.downloadSelectedButton.addEventListener("click", downloadSelected);
+      elements.deleteSelectedButton.addEventListener("click", deleteSelected);
+      elements.closeViewerButton.addEventListener("click", closeViewer);
+      elements.viewer.addEventListener("click", (event) => {
+        if (event.target === elements.viewer) closeViewer();
+      });
+      elements.viewerDownloadButton.addEventListener("click", () => {
+        const photo = getActivePhoto();
+        if (photo) downloadPhoto(photo);
+      });
+      elements.viewerDeleteButton.addEventListener("click", async () => {
+        const photo = getActivePhoto();
+        if (photo) await deletePhotos([photo.id]);
+        closeViewer();
+      });
+      elements.closeCameraButton.addEventListener("click", closeCamera);
+      elements.switchCameraButton.addEventListener("click", switchCamera);
+      elements.shutterButton.addEventListener("click", captureFromLiveCamera);
+      elements.cameraSheet.addEventListener("click", (event) => {
+        if (event.target === elements.cameraSheet) closeCamera();
+      });
+      elements.photoGrid.addEventListener("click", handleGridClick);
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          closeViewer();
+          closeCamera();
+          setSelectionMode(false);
+        }
+      });
+    }
+
+    async function handleFiles(fileList, source) {
+      const files = Array.from(fileList || []).filter((file) => file.type.startsWith("image/"));
+      elements.albumInput.value = "";
+      elements.captureInput.value = "";
+      if (!files.length) return;
+
+      let imported = 0;
+      for (const file of files) {
+        await addPhotoBlob(file, file.name, source);
+        imported += 1;
+      }
+      render();
+      showToast(`${imported} 张照片已入展`);
+    }
+
+    async function addPhotoBlob(blob, originalName, source) {
+      const size = await readImageSize(blob);
+      const id = makeId();
+      const name = normalizeFileName(originalName || `${source}-${formatStamp(new Date())}.jpg`, blob.type);
+      const record = {
+        id,
+        name,
+        type: blob.type || "image/jpeg",
+        blob,
+        source,
+        width: size.width,
+        height: size.height,
+        createdAt: Date.now()
+      };
+      record.url = URL.createObjectURL(blob);
+      state.photos.unshift(record);
+      if (state.selectionMode) state.selected.add(id);
+      if (state.db) {
+        await savePhoto(record);
+      }
+    }
+
+    function render() {
+      const count = state.photos.length;
+      const selectedCount = state.selected.size;
+      document.body.classList.toggle("selection-on", state.selectionMode);
+      elements.emptyState.hidden = count !== 0;
+      elements.statusLine.textContent = count ? `${count} 张作品 · ${selectedCount ? `${selectedCount} 已选` : "本地展陈"}` : "0 张作品";
+      elements.selectModeButton.disabled = count === 0;
+      elements.downloadAllButton.disabled = count === 0;
+      elements.clearButton.disabled = count === 0;
+      elements.selectModeButton.classList.toggle("is-active", state.selectionMode);
+      elements.selectionBar.hidden = !state.selectionMode || count === 0;
+      elements.selectionCount.textContent = String(selectedCount);
+      elements.downloadSelectedButton.disabled = selectedCount === 0;
+      elements.deleteSelectedButton.disabled = selectedCount === 0;
+
+      elements.photoGrid.innerHTML = state.photos.map((photo, index) => {
+        const selected = state.selected.has(photo.id);
+        const ratio = photo.width && photo.height ? `${photo.width} / ${photo.height}` : "4 / 3";
+        const swing = ((index % 5) - 2) * 0.45;
+        return `
+          <figure class="artwork ${selected ? "is-selected" : ""}" data-id="${photo.id}" style="--ratio: ${ratio}; --swing: ${swing}deg">
+            <button class="select-button ${selected ? "is-checked" : ""}" type="button" data-action="select" title="${selected ? "取消选择" : "选择"}" aria-label="${selected ? "取消选择" : "选择"}">
+              ${selected ? icons.check : icons.square}
+            </button>
+            <button class="photo-button" type="button" data-action="open" aria-label="查看 ${escapeHtml(photo.name)}">
+              <span class="photo-frame">
+                <img src="${photo.url}" alt="${escapeHtml(photo.name)}" loading="lazy">
+              </span>
+            </button>
+            <figcaption class="artwork-caption">
+              <span class="artwork-name" title="${escapeHtml(photo.name)}">${escapeHtml(photo.name)}</span>
+              <span class="artwork-meta">${formatSize(photo.blob.size)} · ${formatDimensions(photo)}</span>
+            </figcaption>
+            <div class="artwork-actions">
+              <button class="mini-button" type="button" data-action="download" title="下载" aria-label="下载">${icons.download}</button>
+              <button class="mini-button" type="button" data-action="delete" title="删除" aria-label="删除">${icons.trash}</button>
+            </div>
+          </figure>
+        `;
+      }).join("");
+    }
+
+    async function handleGridClick(event) {
+      const actionElement = event.target.closest("[data-action]");
+      const artwork = event.target.closest("[data-id]");
+      if (!actionElement || !artwork) return;
+
+      const id = artwork.dataset.id;
+      const action = actionElement.dataset.action;
+      const photo = state.photos.find((item) => item.id === id);
+      if (!photo) return;
+
+      if (action === "select") {
+        togglePhotoSelection(id);
+        return;
+      }
+      if (state.selectionMode && action === "open") {
+        togglePhotoSelection(id);
+        return;
+      }
+      if (action === "open") {
+        openViewer(photo);
+        return;
+      }
+      if (action === "download") {
+        downloadPhoto(photo);
+        return;
+      }
+      if (action === "delete") {
+        await deletePhotos([id]);
+      }
+    }
+
+    function togglePhotoSelection(id) {
+      if (state.selected.has(id)) {
+        state.selected.delete(id);
+      } else {
+        state.selected.add(id);
+      }
+      if (!state.selectionMode) state.selectionMode = true;
+      render();
+    }
+
+    function setSelectionMode(enabled) {
+      state.selectionMode = enabled;
+      if (!enabled) state.selected.clear();
+      render();
+    }
+
+    function openViewer(photo) {
+      state.activeId = photo.id;
+      elements.viewerTitle.textContent = photo.name;
+      elements.viewerMeta.textContent = `${photo.source} · ${new Date(photo.createdAt).toLocaleString("zh-CN")}`;
+      elements.viewerSize.textContent = `${formatDimensions(photo)} · ${formatSize(photo.blob.size)}`;
+      elements.viewerImage.src = photo.url;
+      elements.viewerImage.alt = photo.name;
+      elements.viewer.hidden = false;
+    }
+
+    function closeViewer() {
+      if (elements.viewer.hidden) return;
+      elements.viewer.hidden = true;
+      elements.viewerImage.removeAttribute("src");
+      state.activeId = null;
+    }
+
+    function getActivePhoto() {
+      return state.photos.find((photo) => photo.id === state.activeId);
+    }
+
+    async function openCamera() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        showToast("当前浏览器不支持实时相机，可使用拍照导入。");
+        return;
+      }
+      if (!window.isSecureContext) {
+        showToast("实时相机需要 HTTPS 或 localhost，可使用拍照导入。");
+        return;
+      }
+
+      elements.cameraSheet.hidden = false;
+      elements.cameraStatus.textContent = "正在打开";
+      await startCameraStream();
+    }
+
+    async function startCameraStream() {
+      stopCameraStream();
+      try {
+        state.cameraStream = await navigator.mediaDevices.getUserMedia({
+          audio: false,
+          video: {
+            facingMode: { ideal: state.facingMode },
+            width: { ideal: 1920 },
+            height: { ideal: 1080 }
+          }
+        });
+        elements.cameraVideo.srcObject = state.cameraStream;
+        await elements.cameraVideo.play();
+        elements.cameraStatus.textContent = state.facingMode === "environment" ? "后置镜头" : "前置镜头";
+      } catch (error) {
+        elements.cameraStatus.textContent = "未能打开";
+        showToast("没有拿到相机权限，可改用拍照导入。");
+      }
+    }
+
+    async function switchCamera() {
+      state.facingMode = state.facingMode === "environment" ? "user" : "environment";
+      if (!elements.cameraSheet.hidden) {
+        await startCameraStream();
+      }
+    }
+
+    async function captureFromLiveCamera() {
+      const video = elements.cameraVideo;
+      if (!state.cameraStream || !video.videoWidth) {
+        showToast("相机还没有准备好。");
+        return;
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const context = canvas.getContext("2d");
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", .92));
+      if (!blob) {
+        showToast("拍摄失败，请再试一次。");
+        return;
+      }
+      await addPhotoBlob(blob, `camera-${formatStamp(new Date())}.jpg`, "Camera API");
+      render();
+      showToast("照片已入展");
+    }
+
+    async function sharePage() {
+      const shareData = {
+        title: document.title,
+        text: "打开这个手机展厅相册网页",
+        url: window.location.href
+      };
+
+      try {
+        if (navigator.share && window.isSecureContext) {
+          await navigator.share(shareData);
+          return;
+        }
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(shareData.url);
+          showToast("链接已复制");
+          return;
+        }
+        showToast("上线到 HTTPS 后即可一键分享链接。");
+      } catch (error) {
+        showToast("分享已取消");
+      }
+    }
+
+    function closeCamera() {
+      if (elements.cameraSheet.hidden) return;
+      stopCameraStream();
+      elements.cameraSheet.hidden = true;
+      elements.cameraVideo.removeAttribute("srcObject");
+    }
+
+    function stopCameraStream() {
+      if (!state.cameraStream) return;
+      state.cameraStream.getTracks().forEach((track) => track.stop());
+      state.cameraStream = null;
+      elements.cameraVideo.srcObject = null;
+    }
+
+    function downloadPhoto(photo) {
+      const link = document.createElement("a");
+      link.href = photo.url;
+      link.download = normalizeFileName(photo.name, photo.type);
+      document.body.append(link);
+      link.click();
+      link.remove();
+    }
+
+    async function downloadSelected() {
+      const selectedPhotos = state.photos.filter((photo) => state.selected.has(photo.id));
+      await downloadPhotos(selectedPhotos);
+    }
+
+    async function downloadPhotos(photos) {
+      if (!photos.length) return;
+      if (photos.length === 1) {
+        downloadPhoto(photos[0]);
+        return;
+      }
+
+      try {
+        const zip = await createZip(photos);
+        const url = URL.createObjectURL(zip);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `mobile-gallery-${formatStamp(new Date())}.zip`;
+        document.body.append(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1200);
+        showToast(`${photos.length} 张照片已打包下载`);
+      } catch (error) {
+        showToast("打包下载失败，请改为单张下载。");
+      }
+    }
+
+    async function deleteSelected() {
+      await deletePhotos(Array.from(state.selected));
+      setSelectionMode(false);
+    }
+
+    async function deletePhotos(ids) {
+      if (!ids.length) return;
+      const idSet = new Set(ids);
+      for (const photo of state.photos) {
+        if (idSet.has(photo.id)) URL.revokeObjectURL(photo.url);
+      }
+      state.photos = state.photos.filter((photo) => !idSet.has(photo.id));
+      ids.forEach((id) => state.selected.delete(id));
+      if (state.db) {
+        await Promise.all(ids.map((id) => removePhoto(id)));
+      }
+      render();
+      showToast(`${ids.length} 张照片已移出展厅`);
+    }
+
+    async function clearGallery() {
+      if (!state.photos.length) return;
+      const confirmed = window.confirm("要清空当前展厅吗？");
+      if (!confirmed) return;
+      state.photos.forEach((photo) => URL.revokeObjectURL(photo.url));
+      state.photos = [];
+      state.selected.clear();
+      state.selectionMode = false;
+      if (state.db) await clearPhotos();
+      closeViewer();
+      render();
+      showToast("展厅已清空");
+    }
+
+    function openDatabase() {
+      return new Promise((resolve, reject) => {
+        if (!("indexedDB" in window)) {
+          reject(new Error("IndexedDB unsupported"));
+          return;
+        }
+        const request = indexedDB.open(DB_NAME, 1);
+        request.onupgradeneeded = () => {
+          const db = request.result;
+          if (!db.objectStoreNames.contains(STORE_NAME)) {
+            const store = db.createObjectStore(STORE_NAME, { keyPath: "id" });
+            store.createIndex("createdAt", "createdAt");
+          }
+        };
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    function loadPhotos() {
+      return new Promise((resolve, reject) => {
+        const transaction = state.db.transaction(STORE_NAME, "readonly");
+        const request = transaction.objectStore(STORE_NAME).getAll();
+        request.onsuccess = () => {
+          state.photos.forEach((photo) => URL.revokeObjectURL(photo.url));
+          state.photos = request.result
+            .sort((a, b) => b.createdAt - a.createdAt)
+            .map((photo) => ({ ...photo, url: URL.createObjectURL(photo.blob) }));
+          resolve();
+        };
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    function savePhoto(photo) {
+      return new Promise((resolve, reject) => {
+        const transaction = state.db.transaction(STORE_NAME, "readwrite");
+        const cleanPhoto = { ...photo };
+        delete cleanPhoto.url;
+        transaction.objectStore(STORE_NAME).put(cleanPhoto);
+        transaction.oncomplete = () => resolve();
+        transaction.onerror = () => reject(transaction.error);
+      });
+    }
+
+    function removePhoto(id) {
+      return new Promise((resolve, reject) => {
+        const transaction = state.db.transaction(STORE_NAME, "readwrite");
+        transaction.objectStore(STORE_NAME).delete(id);
+        transaction.oncomplete = () => resolve();
+        transaction.onerror = () => reject(transaction.error);
+      });
+    }
+
+    function clearPhotos() {
+      return new Promise((resolve, reject) => {
+        const transaction = state.db.transaction(STORE_NAME, "readwrite");
+        transaction.objectStore(STORE_NAME).clear();
+        transaction.oncomplete = () => resolve();
+        transaction.onerror = () => reject(transaction.error);
+      });
+    }
+
+    function readImageSize(blob) {
+      if ("createImageBitmap" in window) {
+        return createImageBitmap(blob).then((bitmap) => {
+          const size = { width: bitmap.width, height: bitmap.height };
+          bitmap.close();
+          return size;
+        }).catch(() => readImageSizeWithTag(blob));
+      }
+      return readImageSizeWithTag(blob);
+    }
+
+    function readImageSizeWithTag(blob) {
+      return new Promise((resolve) => {
+        const url = URL.createObjectURL(blob);
+        const image = new Image();
+        image.onload = () => {
+          const size = { width: image.naturalWidth, height: image.naturalHeight };
+          URL.revokeObjectURL(url);
+          resolve(size);
+        };
+        image.onerror = () => {
+          URL.revokeObjectURL(url);
+          resolve({ width: 0, height: 0 });
+        };
+        image.src = url;
+      });
+    }
+
+    async function createZip(photos) {
+      const encoder = new TextEncoder();
+      const parts = [];
+      const centralParts = [];
+      const usedNames = new Set();
+      let offset = 0;
+
+      for (let index = 0; index < photos.length; index += 1) {
+        const photo = photos[index];
+        const bytes = new Uint8Array(await photo.blob.arrayBuffer());
+        const fileName = uniqueZipName(photo, index, usedNames);
+        const nameBytes = encoder.encode(fileName);
+        const crc = crc32(bytes);
+        const { dosDate, dosTime } = toDosDateTime(new Date(photo.createdAt));
+
+        const local = new Uint8Array(30 + nameBytes.length);
+        const localView = new DataView(local.buffer);
+        localView.setUint32(0, 0x04034b50, true);
+        localView.setUint16(4, 20, true);
+        localView.setUint16(6, 0x0800, true);
+        localView.setUint16(8, 0, true);
+        localView.setUint16(10, dosTime, true);
+        localView.setUint16(12, dosDate, true);
+        localView.setUint32(14, crc, true);
+        localView.setUint32(18, bytes.length, true);
+        localView.setUint32(22, bytes.length, true);
+        localView.setUint16(26, nameBytes.length, true);
+        local.set(nameBytes, 30);
+
+        const central = new Uint8Array(46 + nameBytes.length);
+        const centralView = new DataView(central.buffer);
+        centralView.setUint32(0, 0x02014b50, true);
+        centralView.setUint16(4, 20, true);
+        centralView.setUint16(6, 20, true);
+        centralView.setUint16(8, 0x0800, true);
+        centralView.setUint16(10, 0, true);
+        centralView.setUint16(12, dosTime, true);
+        centralView.setUint16(14, dosDate, true);
+        centralView.setUint32(16, crc, true);
+        centralView.setUint32(20, bytes.length, true);
+        centralView.setUint32(24, bytes.length, true);
+        centralView.setUint16(28, nameBytes.length, true);
+        centralView.setUint16(36, 0, true);
+        centralView.setUint32(42, offset, true);
+        central.set(nameBytes, 46);
+
+        parts.push(local, bytes);
+        centralParts.push(central);
+        offset += local.length + bytes.length;
+      }
+
+      const centralOffset = offset;
+      const centralSize = centralParts.reduce((size, part) => size + part.length, 0);
+      const end = new Uint8Array(22);
+      const endView = new DataView(end.buffer);
+      endView.setUint32(0, 0x06054b50, true);
+      endView.setUint16(8, photos.length, true);
+      endView.setUint16(10, photos.length, true);
+      endView.setUint32(12, centralSize, true);
+      endView.setUint32(16, centralOffset, true);
+
+      return new Blob([...parts, ...centralParts, end], { type: "application/zip" });
+    }
+
+    const crcTable = (() => {
+      const table = new Uint32Array(256);
+      for (let n = 0; n < 256; n += 1) {
+        let c = n;
+        for (let k = 0; k < 8; k += 1) {
+          c = (c & 1) ? (0xedb88320 ^ (c >>> 1)) : (c >>> 1);
+        }
+        table[n] = c >>> 0;
+      }
+      return table;
+    })();
+
+    function crc32(bytes) {
+      let crc = 0xffffffff;
+      for (let i = 0; i < bytes.length; i += 1) {
+        crc = crcTable[(crc ^ bytes[i]) & 0xff] ^ (crc >>> 8);
+      }
+      return (crc ^ 0xffffffff) >>> 0;
+    }
+
+    function toDosDateTime(date) {
+      const year = Math.max(1980, date.getFullYear());
+      const dosTime = (date.getHours() << 11) | (date.getMinutes() << 5) | Math.floor(date.getSeconds() / 2);
+      const dosDate = ((year - 1980) << 9) | ((date.getMonth() + 1) << 5) | date.getDate();
+      return { dosDate, dosTime };
+    }
+
+    function uniqueZipName(photo, index, usedNames) {
+      const clean = normalizeFileName(photo.name || `photo-${index + 1}.jpg`, photo.type);
+      const dot = clean.lastIndexOf(".");
+      const base = dot > 0 ? clean.slice(0, dot) : clean;
+      const ext = dot > 0 ? clean.slice(dot) : "";
+      let candidate = clean;
+      let suffix = 2;
+      while (usedNames.has(candidate)) {
+        candidate = `${base}-${suffix}${ext}`;
+        suffix += 1;
+      }
+      usedNames.add(candidate);
+      return candidate;
+    }
+
+    function normalizeFileName(name, type) {
+      const fallbackExt = extensionFromType(type);
+      const cleaned = String(name)
+        .trim()
+        .replace(/[\\/:*?"<>|]+/g, "-")
+        .replace(/\s+/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "")
+        .slice(0, 90);
+      const base = cleaned || `photo-${formatStamp(new Date())}`;
+      return /\.[a-z0-9]{2,5}$/i.test(base) ? base : `${base}.${fallbackExt}`;
+    }
+
+    function extensionFromType(type) {
+      if (type === "image/png") return "png";
+      if (type === "image/webp") return "webp";
+      if (type === "image/gif") return "gif";
+      if (type === "image/heic") return "heic";
+      return "jpg";
+    }
+
+    function makeId() {
+      if (crypto.randomUUID) return crypto.randomUUID();
+      return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    }
+
+    function formatStamp(date) {
+      const pad = (value) => String(value).padStart(2, "0");
+      return `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}-${pad(date.getHours())}${pad(date.getMinutes())}${pad(date.getSeconds())}`;
+    }
+
+    function formatSize(bytes) {
+      if (!Number.isFinite(bytes)) return "--";
+      if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+      return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+    }
+
+    function formatDimensions(photo) {
+      return photo.width && photo.height ? `${photo.width} × ${photo.height}` : "未知尺寸";
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      }[char]));
+    }
+
+    function showToast(message) {
+      clearTimeout(state.toastTimer);
+      elements.toast.textContent = message;
+      elements.toast.classList.add("is-visible");
+      state.toastTimer = setTimeout(() => {
+        elements.toast.classList.remove("is-visible");
+      }, 2600);
+    }
+
+    if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js").catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>

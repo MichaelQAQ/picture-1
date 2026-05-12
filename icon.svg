@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="展厅相册">
+  <rect width="512" height="512" rx="96" fill="#f5f1e9"/>
+  <path d="M92 128h328v272H92z" fill="#fffdf8" stroke="#2f4f4f" stroke-width="24" stroke-linejoin="round"/>
+  <path d="M132 168h248v152H132z" fill="#111" stroke="#242321" stroke-width="14"/>
+  <path d="m132 320 74-78 54 48 48-42 72 72z" fill="#0f766e"/>
+  <circle cx="196" cy="214" r="28" fill="#b87920"/>
+  <path d="M256 80v48M208 80h96" stroke="#b4493f" stroke-width="20" stroke-linecap="round"/>
+  <path d="M142 374h228" stroke="#cbb89d" stroke-width="20" stroke-linecap="round"/>
+</svg>
