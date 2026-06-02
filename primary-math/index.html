@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>小学数学专区</title>
+  <meta name="description" content="小学数学专区，集中整理小学阶段数学知识点、例题和直观图示。">
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #202b32;
+      --muted: #65726f;
+      --paper: #fffdf7;
+      --wash: #f5efe3;
+      --teal: #178f86;
+      --red: #d84f45;
+      --gold: #e5aa32;
+      --blue: #315f78;
+      --line: rgba(32, 43, 50, .14);
+      --shadow: 0 18px 48px rgba(33, 42, 38, .12);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        linear-gradient(180deg, rgba(255, 253, 247, .72), rgba(245, 239, 227, .9)),
+        var(--wash);
+      letter-spacing: 0;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .hero {
+      min-height: 64svh;
+      display: grid;
+      align-items: end;
+      background-image:
+        linear-gradient(90deg, rgba(22, 31, 34, .86), rgba(22, 31, 34, .68) 46%, rgba(22, 31, 34, .18)),
+        url("assets/grade5-math-hero.png");
+      background-size: cover;
+      background-position: center;
+    }
+
+    .hero-inner,
+    .section-inner {
+      width: min(1120px, calc(100% - 40px));
+      margin: 0 auto;
+    }
+
+    .hero-inner {
+      padding: 88px 0 56px;
+      color: #fffdf7;
+    }
+
+    .kicker {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      color: #f4d181;
+      font-size: .9rem;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+
+    .kicker::before {
+      content: "";
+      width: 34px;
+      height: 3px;
+      border-radius: 8px;
+      background: #f4d181;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      max-width: 760px;
+      margin-top: 16px;
+      font-size: clamp(2.5rem, 8vw, 5.6rem);
+      line-height: .98;
+      font-weight: 900;
+      text-shadow: 0 3px 18px rgba(0, 0, 0, .26);
+    }
+
+    .hero-copy {
+      max-width: 720px;
+      margin-top: 22px;
+      color: rgba(255, 253, 247, .86);
+      font-size: clamp(1rem, 2.2vw, 1.2rem);
+      line-height: 1.85;
+    }
+
+    .nav-row {
+      margin-top: 28px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .button {
+      min-height: 42px;
+      padding: 10px 14px;
+      border: 1px solid rgba(255, 253, 247, .42);
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #fffdf7;
+      background: rgba(255, 253, 247, .12);
+      font-weight: 800;
+    }
+
+    .button.primary {
+      color: var(--ink);
+      background: #fffdf7;
+      border-color: transparent;
+    }
+
+    section {
+      padding: clamp(44px, 7vw, 78px) 0;
+    }
+
+    .section-title {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+
+    h2 {
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      line-height: 1.1;
+    }
+
+    .section-title p {
+      max-width: 720px;
+      color: var(--muted);
+      line-height: 1.85;
+    }
+
+    .grade-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .grade-card {
+      min-height: 230px;
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      box-shadow: var(--shadow);
+      display: grid;
+      gap: 14px;
+      align-content: start;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .grade-card::before {
+      content: "";
+      width: 48px;
+      height: 5px;
+      border-radius: 8px;
+      background: var(--card-color, var(--teal));
+    }
+
+    .grade-card h3 {
+      font-size: 1.55rem;
+      line-height: 1.2;
+    }
+
+    .grade-card p {
+      color: var(--muted);
+      line-height: 1.72;
+    }
+
+    .meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      border-radius: 8px;
+      padding: 6px 9px;
+      color: #fffdf7;
+      background: var(--card-color, var(--teal));
+      font-size: .84rem;
+      font-weight: 850;
+    }
+
+    .card-action {
+      width: max-content;
+      min-height: 38px;
+      margin-top: 6px;
+      padding: 9px 12px;
+      border-radius: 8px;
+      color: #fffdf7;
+      background: var(--ink);
+      font-weight: 850;
+    }
+
+    .placeholder {
+      opacity: .62;
+      box-shadow: none;
+    }
+
+    .footer {
+      padding: 28px 20px 42px;
+      color: rgba(255, 253, 247, .78);
+      background: #202b32;
+    }
+
+    .footer-inner {
+      max-width: 1120px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 860px) {
+      .grade-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .hero {
+        min-height: 70svh;
+        background-image:
+          linear-gradient(90deg, rgba(22, 31, 34, .94), rgba(22, 31, 34, .82) 65%, rgba(22, 31, 34, .58)),
+          url("assets/grade5-math-hero.png");
+        background-position: 32% center;
+      }
+
+      .hero-inner,
+      .section-inner {
+        width: min(100% - 28px, 1120px);
+      }
+
+      h1 {
+        font-size: clamp(2.3rem, 13vw, 3.3rem);
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero" aria-label="小学数学专区">
+      <div class="hero-inner">
+        <div class="kicker">Primary Math</div>
+        <h1>小学数学专区</h1>
+        <p class="hero-copy">
+          这里单独整理小学数学资料，和仓库原来的相册页面、音乐文件、iOS 项目分开管理。
+          当前已发布五年级数学知识点大全，后续可以继续扩展一年级到六年级。
+        </p>
+        <div class="nav-row">
+          <a class="button primary" href="grade5/">打开五年级知识点</a>
+          <a class="button" href="../">返回仓库首页</a>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-inner">
+        <div class="section-title">
+          <h2>年级文档</h2>
+          <p>专区内每个年级都可以单独放一个目录，页面、图片和后续资料都在 `primary-math/` 下集中管理。</p>
+        </div>
+
+        <div class="grade-grid">
+          <a class="grade-card" style="--card-color: var(--teal)" href="grade5/">
+            <div class="meta">
+              <span class="pill">已发布</span>
+              <span class="pill">25 个知识点</span>
+              <span class="pill">75 个图示例题</span>
+            </div>
+            <h3>五年级数学知识点大全</h3>
+            <p>按数与运算、关系与代数、图形与几何、统计与概率、问题解决组织；每个例子配直观图示。</p>
+            <span class="card-action">进入文档</span>
+          </a>
+
+          <article class="grade-card placeholder" style="--card-color: var(--gold)">
+            <div class="meta"><span class="pill">规划中</span></div>
+            <h3>低年级基础</h3>
+            <p>可继续放一年级、二年级的数感、加减法、图形认识和长度单位资料。</p>
+          </article>
+
+          <article class="grade-card placeholder" style="--card-color: var(--blue)">
+            <div class="meta"><span class="pill">规划中</span></div>
+            <h3>中高年级专题</h3>
+            <p>可继续放三到六年级的分数、小数、面积、体积、统计和解决问题专题。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <span>小学数学专区</span>
+      <span>primary-math/</span>
+    </div>
+  </footer>
+</body>
+</html>
